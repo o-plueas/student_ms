@@ -12,14 +12,14 @@ ENV REAL_IP_HEADER 1
 # Laravel config
 ENV APP_ENV production
 ENV APP_DEBUG false
-ENV APP_NAME ProjectName
-ENV APP_URL https://yourprojecturl.onrender.com/
-ENV DB_CONNECTION someValue
-ENV DB_HOST someValue
-ENV DB_PORT someValue
-ENV DB_DATABASE someValue
-ENV DB_USERNAME someValue
-ENV DB_PASSWORD someValue
+ENV APP_NAME student_ms
+ENV APP_URL https://student_ms.onrender.com/
+ENV DB_CONNECTION pgsql
+ENV DB_HOST dpg-d3rmf4je5dus73boa6p0-a
+ENV DB_PORT 5432
+ENV DB_DATABASE sms_db_pk7r
+ENV DB_USERNAME sms_db_pk7r_user
+ENV DB_PASSWORD 
 ENV BROADCAST_CONNECTION log
 ENV MAIL_MAILER someValue
 ENV MAIL_HOST someValue
