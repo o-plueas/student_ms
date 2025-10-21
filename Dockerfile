@@ -8,7 +8,6 @@ WORKDIR /var/www/html
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
-    libpq-dev \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
@@ -16,15 +15,19 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
+# Install PHP extensions INCLUDING ZIP (must be before composer runs)
+RUN docker-php-ext-install -j$(nproc) \
     pdo \
-    pdo_pgsql \
-    pgsql \
+    pdo_mysql \
     zip \
-    gd \
     bcmath
+
+# Install GD extension separately (needs configuration)
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd
+
+# Verify zip extension is installed
+RUN php -m | grep -i zip
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -32,27 +35,22 @@ RUN a2enmod rewrite
 # Copy composer binary
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy composer files first for better layer caching
-COPY composer.json composer.lock ./
-
-# Increase memory for composer
+# Set composer environment variables
 ENV COMPOSER_MEMORY_LIMIT=-1
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Install dependencies with verbose output to see what's failing
+# Copy composer files first
+COPY composer.json composer.lock ./
+
+# Install dependencies - zip extension should now work
 RUN composer install \
     --no-dev \
-    --no-scripts \
-    --no-autoloader \
     --prefer-dist \
-    --ignore-platform-reqs \
-    --verbose
+    --optimize-autoloader \
+    --no-interaction
 
 # Copy rest of the application
 COPY . .
-
-# Generate optimized autoloader
-RUN composer dump-autoload --optimize --no-dev
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \
